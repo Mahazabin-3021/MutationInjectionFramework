@@ -1,0 +1,33 @@
+// SOURCE: modules/photo/src/intelligent_scissors.cpp
+// LINES:  452-479
+// LENGTH: 28 lines
+// LANG:   cpp
+// FUNC:   extractGradientMagnitude_
+void extractGradientMagnitude_(InputArray image)
+    {
+        CV_TRACE_FUNCTION();
+
+        initImageMagnitude_(image);  // calls internally: initImageDerives_(image);
+        Mat m;
+        double max_m = 0;
+        if (gradient_magnitude_threshold_max > 0)
+        {
+            threshold(image_magnitude_, m, gradient_magnitude_threshold_max, 0, THRESH_TRUNC);
+            max_m = gradient_magnitude_threshold_max;
+        }
+        else
+        {
+            m = image_magnitude_;
+            minMaxLoc(m, 0, &max_m);
+        }
+        if (max_m <= FLT_EPSILON)
+        {
+            CV_LOG_INFO(NULL, "IntelligentScissorsMB: input image gradient is almost zero")
+            gradient_magnitude.create(src_size);
+            gradient_magnitude.setTo(0);
+        }
+        else
+        {
+            m.convertTo(gradient_magnitude, CV_32F, -1.0 / max_m, 1.0);  // normalize and inverse to range 0..1
+        }
+    }

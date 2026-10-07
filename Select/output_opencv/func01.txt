@@ -1,0 +1,33 @@
+// SOURCE: modules/core/test/test_intrin_utils.hpp
+// LINES:  409-436
+// LENGTH: 28 lines
+// LANG:   cpp
+// FUNC:   dataA
+TheTest & test_interleave_pq()
+    {
+        Data<R> dataA;
+        R a = dataA;
+        Data<R> resP = v_interleave_pairs(a);
+        Data<R> resQ = v_interleave_quads(a);
+        for (int i = 0; i < VTraits<R>::vlanes()/4; ++i)
+        {
+            SCOPED_TRACE(cv::format("i=%d", i));
+            EXPECT_EQ(resP[4*i],     dataA[4*i  ]);
+            EXPECT_EQ(resP[4*i + 1], dataA[4*i+2]);
+            EXPECT_EQ(resP[4*i + 2], dataA[4*i+1]);
+            EXPECT_EQ(resP[4*i + 3], dataA[4*i+3]);
+        }
+        for (int i = 0; i < VTraits<R>::vlanes()/8; ++i)
+        {
+            SCOPED_TRACE(cv::format("i=%d", i));
+            EXPECT_EQ(resQ[8*i],     dataA[8*i  ]);
+            EXPECT_EQ(resQ[8*i + 1], dataA[8*i+4]);
+            EXPECT_EQ(resQ[8*i + 2], dataA[8*i+1]);
+            EXPECT_EQ(resQ[8*i + 3], dataA[8*i+5]);
+            EXPECT_EQ(resQ[8*i + 4], dataA[8*i+2]);
+            EXPECT_EQ(resQ[8*i + 5], dataA[8*i+6]);
+            EXPECT_EQ(resQ[8*i + 6], dataA[8*i+3]);
+            EXPECT_EQ(resQ[8*i + 7], dataA[8*i+7]);
+        }
+        return *this;
+    }

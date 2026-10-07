@@ -1,0 +1,15 @@
+// SOURCE: modules/features/test/npy_blob.cpp
+// LINES:  14-23
+// LENGTH: 10 lines
+// LANG:   cpp
+// FUNC:   getType
+static std::string getType(const std::string& header)
+{
+    std::string field = "'descr':";
+    size_t idx = header.find(field);
+    CV_Assert(idx != std::string::npos);
+
+    size_t from = header.find('\'', idx + field.size()) + 1;
+    size_t to = header.find('\'', from);
+    return header.substr(from, to - from);
+}

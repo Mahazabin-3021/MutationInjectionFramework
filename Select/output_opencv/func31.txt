@@ -1,0 +1,30 @@
+// SOURCE: modules/dnn/src/onnx/onnx_importer2.cpp
+// LINES:  2713-2737
+// LENGTH: 25 lines
+// LANG:   cpp
+// FUNC:   ONNXImporter2::parseQSigmoid
+void ONNXImporter2::parseQSigmoid(LayerParams& layerParams, const opencv_onnx::NodeProto& node_proto)
+{
+    int ninputs = node_proto.input_size();
+    CV_Assert(ninputs == 4 || ninputs == 5);
+
+    std::string bn = layerParams.name;
+    std::vector<Arg> inp = node_inputs;
+    std::vector<Arg> out = node_outputs;
+
+    Arg dq_x;
+    dq_x = addDequantize(bn + "/dequant_x", {inp[0], inp[1], inp[2]}, node_proto);
+
+    LayerParams sigLp;
+    sigLp.name = bn + "/sigmoid";
+    sigLp.type = "Sigmoid";
+    Arg sig_out = net.getArg(sigLp.name);
+    node_inputs = {dq_x};
+    node_outputs = {sig_out};
+    addLayer(sigLp, node_proto);
+
+    std::vector<Arg> q_sc_zp = {inp[3]};
+    if (ninputs == 5)
+        q_sc_zp.push_back(inp[4]);
+    addQuantize(bn + "/quant_y", sig_out, q_sc_zp, out, node_proto);
+}

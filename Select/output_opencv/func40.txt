@@ -1,0 +1,50 @@
+// SOURCE: samples/cpp/barcode.cpp
+// LINES:  96-140
+// LENGTH: 45 lines
+// LANG:   cpp
+// FUNC:   liveBarCodeDetect
+int liveBarCodeDetect()
+    {
+        VideoCapture cap(0);
+        if (!cap.isOpened())
+        {
+            cout << "Cannot open a camera" << endl;
+            return 2;
+        }
+        Mat frame;
+        Mat result;
+        cap >> frame;
+        cout << "Image size: " << frame.size() << endl;
+        cout << "Press 'd' to switch between <detect> and <detectAndDecode> modes" << endl;
+        cout << "Press 'ESC' to exit" << endl;
+        for (;;)
+        {
+            cap >> frame;
+            if (frame.empty())
+            {
+                cout << "End of video stream" << endl;
+                break;
+            }
+            if (frame.channels() == 1)
+                cvtColor(frame, frame, COLOR_GRAY2BGR);
+            TickMeter timer;
+            timer.start();
+            call_decode(frame);
+            timer.stop();
+            drawResults(frame);
+            drawFPS(frame, timer.getFPS());
+            imshow("barcode", frame);
+            const char c = (char)waitKey(1);
+            if (c == 'd')
+            {
+                detectOnly = !detectOnly;
+                cout << "Mode switched to " << modeString() << endl;
+            }
+            else if (c == 27)
+            {
+                cout << "'ESC' is pressed. Exiting..." << endl;
+                break;
+            }
+        }
+        return 0;
+    }

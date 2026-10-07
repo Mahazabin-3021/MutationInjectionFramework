@@ -1,0 +1,19 @@
+// SOURCE: modules/dnn/test/test_onnx_conformance.cpp
+// LINES:  1839-1852
+// LENGTH: 14 lines
+// LANG:   cpp
+// FUNC:   printOnnxConfParams
+std::string printOnnxConfParams(const testing::TestParamInfo<ONNXConfParams>& params)
+{
+    TestCase test_case = get<0>(params.param);
+    Backend backend = get<0>(get<1>(params.param));
+    Target target = get<1>(get<1>(params.param));
+
+    std::stringstream ss;
+    ss << test_case.name << "_";
+    PrintTo(backend, &ss);
+    ss << "_";
+    PrintTo(target, &ss);
+
+    return ss.str();
+}

@@ -1,0 +1,47 @@
+// SOURCE: modules/imgproc/src/sumpixels.dispatch.cpp
+// LINES:  96-137
+// LENGTH: 42 lines
+// LANG:   cpp
+// FUNC:   ocl_integral
+static bool ocl_integral( InputArray _src, OutputArray _sum, OutputArray _sqsum, int sdepth, int sqdepth )
+{
+    bool doubleSupport = ocl::Device::getDefault().doubleFPConfig() > 0;
+
+    if ( _src.type() != CV_8UC1 || (!doubleSupport && (sdepth == CV_64F || sqdepth == CV_64F)) )
+        return false;
+
+    static const int tileSize = 16;
+
+    String build_opt = format("-D SUM_SQUARE -D sumT=%s -D sumSQT=%s -D LOCAL_SUM_SIZE=%d%s",
+                                ocl::typeToStr(sdepth), ocl::typeToStr(sqdepth),
+                                tileSize,
+                                doubleSupport ? " -D DOUBLE_SUPPORT" : "");
+
+    ocl::Kernel kcols("integral_sum_cols", ocl::imgproc::integral_sum_oclsrc, build_opt);
+    if (kcols.empty())
+        return false;
+
+    UMat src = _src.getUMat();
+    Size src_size = src.size();
+    Size bufsize(((src_size.height + tileSize - 1) / tileSize) * tileSize, ((src_size.width + tileSize - 1) / tileSize) * tileSize);
+    UMat buf(bufsize, sdepth);
+    UMat buf_sq(bufsize, sqdepth);
+    kcols.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnlyNoSize(buf), ocl::KernelArg::WriteOnlyNoSize(buf_sq));
+    size_t gt = src.cols, lt = tileSize;
+    if (!kcols.run(1, &gt, &lt, false))
+        return false;
+
+    ocl::Kernel krows("integral_sum_rows", ocl::imgproc::integral_sum_oclsrc, build_opt);
+    if (krows.empty())
+        return false;
+
+    Size sumsize(src_size.width + 1, src_size.height + 1);
+    _sum.create(sumsize, sdepth);
+    UMat sum = _sum.getUMat();
+    _sqsum.create(sumsize, sqdepth);
+    UMat sum_sq = _sqsum.getUMat();
+
+    krows.args(ocl::KernelArg::ReadOnlyNoSize(buf), ocl::KernelArg::ReadOnlyNoSize(buf_sq), ocl::KernelArg::WriteOnly(sum), ocl::KernelArg::WriteOnlyNoSize(sum_sq));
+    gt = src.rows;
+    return krows.run(1, &gt, &lt, false);
+}

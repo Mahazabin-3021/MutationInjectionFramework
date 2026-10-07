@@ -1,0 +1,107 @@
+// SOURCE: modules/objdetect/src/calibinit.cpp
+// LINES:  2088-2189
+// LENGTH: 102 lines
+// LANG:   cpp
+// FUNC:   drawChessboardCorners
+void drawChessboardCorners( InputOutputArray image, Size patternSize,
+                                InputArray _corners,
+                                bool patternWasFound )
+{
+    CV_INSTRUMENT_REGION();
+
+    int type = image.type();
+    int cn = CV_MAT_CN(type);
+    CV_CheckType(type, cn == 1 || cn == 3 || cn == 4,
+            "Number of channels must be 1, 3 or 4" );
+
+    int depth = CV_MAT_DEPTH(type);
+    CV_CheckType(type, depth == CV_8U || depth == CV_16U || depth == CV_32F,
+            "Only 8-bit, 16-bit or floating-point 32-bit images are supported");
+
+    if (_corners.empty())
+        return;
+    Mat corners = _corners.getMat();
+    const Point2f* corners_data = corners.ptr<Point2f>(0);
+    CV_DbgAssert(corners_data);
+    int nelems = corners.checkVector(2, CV_32F, true);
+    CV_Assert(nelems >= 0);
+
+    const int shift = 0;
+    const int radius = 4;
+    const int r = radius*(1 << shift);
+
+    double scale = 1;
+    switch (depth)
+    {
+    case CV_8U:
+        scale = 1;
+        break;
+    case CV_16U:
+        scale = 256;
+        break;
+    case CV_32F:
+        scale = 1./255;
+        break;
+    }
+
+    int line_type = (type == CV_8UC1 || type == CV_8UC3) ? LINE_AA : LINE_8;
+
+    if (!patternWasFound)
+    {
+        Scalar color(0,0,255,0);
+        if (cn == 1)
+            color = Scalar::all(200);
+        color *= scale;
+
+        for (int i = 0; i < nelems; i++ )
+        {
+            Point2i pt(
+                    cvRound(corners_data[i].x*(1 << shift)),
+                    cvRound(corners_data[i].y*(1 << shift))
+            );
+            line(image, Point(pt.x - r, pt.y - r), Point( pt.x + r, pt.y + r), color, 1, line_type, shift);
+            line(image, Point(pt.x - r, pt.y + r), Point( pt.x + r, pt.y - r), color, 1, line_type, shift);
+            circle(image, pt, r+(1<<shift), color, 1, line_type, shift);
+        }
+    }
+    else
+    {
+        const int line_max = 7;
+        static const int line_colors[line_max][4] =
+        {
+            {0,0,255,0},
+            {0,128,255,0},
+            {0,200,200,0},
+            {0,255,0,0},
+            {200,200,0,0},
+            {255,0,0,0},
+            {255,0,255,0}
+        };
+
+        Point2i prev_pt;
+        for (int y = 0, i = 0; y < patternSize.height; y++)
+        {
+            const int* line_color = &line_colors[y % line_max][0];
+            Scalar color(line_color[0], line_color[1], line_color[2], line_color[3]);
+            if (cn == 1)
+                color = Scalar::all(200);
+            color *= scale;
+
+            for (int x = 0; x < patternSize.width; x++, i++)
+            {
+                Point2i pt(
+                        cvRound(corners_data[i].x*(1 << shift)),
+                        cvRound(corners_data[i].y*(1 << shift))
+                );
+
+                if (i != 0)
+                    line(image, prev_pt, pt, color, 1, line_type, shift);
+
+                line(image, Point(pt.x - r, pt.y - r), Point( pt.x + r, pt.y + r), color, 1, line_type, shift);
+                line(image, Point(pt.x - r, pt.y + r), Point( pt.x + r, pt.y - r), color, 1, line_type, shift);
+                circle(image, pt, r+(1<<shift), color, 1, line_type, shift);
+                prev_pt = pt;
+            }
+        }
+    }
+}

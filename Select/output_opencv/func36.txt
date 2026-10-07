@@ -1,0 +1,102 @@
+// SOURCE: modules/dnn/src/layers/quantlizelinear_layer.cpp
+// LINES:  412-508
+// LENGTH: 97 lines
+// LANG:   cpp
+// FUNC:   QuantizeLinearLayer
+class QuantizeLinearLayerImpl CV_FINAL : public QuantizeLinearLayer
+{
+public:
+    QuantizeLinearLayerImpl(const LayerParams& params)
+    {
+        setParamsFrom(params);
+
+        axis = params.get<int>("axis", 1);
+        block_size = params.get<int>("block_size", 0);
+        saturate = params.get<bool>("saturate", true);
+        output_dtype = params.get<int>("output_dtype", -1);
+        output_onnx_dtype = params.get<int>("output_onnx_dtype", -1);
+        CV_Assert(block_size >= 0);
+    }
+
+    virtual bool supportBackend(int backendId) CV_OVERRIDE
+    {
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE_NGRAPH;
+    }
+
+    bool getMemoryShapes(const std::vector<MatShape> &inputs,
+                         const int requiredOutputs,
+                         std::vector<MatShape> &outputs,
+                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    {
+        size_t ninputs = inputs.size();
+        CV_Assert(2 <= ninputs && ninputs <= 3);
+        CV_Assert(requiredOutputs == 1);
+        outputs.assign(1, inputs[0]);
+        return true;
+    }
+
+    int getOutType(int zptype) const
+    {
+        return output_dtype >= 0 ? output_dtype : zptype;
+    }
+
+    void getTypes(const std::vector<MatType>& inputs,
+        const int requiredOutputs,
+        const int requiredInternals,
+        std::vector<MatType>& outputs,
+        std::vector<MatType>& internals) const CV_OVERRIDE
+    {
+        size_t ninputs = inputs.size();
+        CV_Assert(2 <= ninputs && ninputs <= 3);
+        int zptype = CV_8U;
+        if (ninputs == 3) {
+            zptype = inputs[2];
+        }
+        outputs.assign(1, getOutType(zptype));
+    }
+
+    virtual void finalize(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr) CV_OVERRIDE
+    {
+    }
+
+    void forward(InputArrayOfArrays inputs_arr,
+                 OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays) CV_OVERRIDE
+    {
+        CV_TRACE_FUNCTION();
+        CV_TRACE_ARG_VALUE(name, "name", name.c_str());
+
+        int ninputs = inputs_arr.size(-1).area();
+        CV_Assert(2 <= ninputs && ninputs <= 3);
+
+        Mat inp = inputs_arr.getMat(0);
+        Mat scale = inputs_arr.getMat(1);
+        Mat zeropoint;
+        int zptype = CV_8U, outtype;
+        MatShape inpshape = inp.shape();
+
+        if (ninputs >= 3) {
+            zeropoint = inputs_arr.getMat(2);
+            zptype = zeropoint.type();
+        }
+
+        outtype = getOutType(zptype);
+        auto kind = outputs_arr.kind();
+
+        if (kind == _InputArray::STD_VECTOR_MAT) {
+            std::vector<Mat>& outs = outputs_arr.getMatVecRef();
+            outs.resize(1);
+            outs[0].fit(inpshape, outtype);
+            quantizeLinear(inp, scale, zeropoint, axis, block_size, output_onnx_dtype, saturate, outs[0]);
+        } else if (kind == _InputArray::STD_VECTOR_UMAT) {
+            std::vector<UMat>& outs = outputs_arr.getUMatVecRef();
+            outs.resize(1);
+            outs[0].fit(inpshape, outtype);
+            Mat temp(inpshape, outtype);
+            quantizeLinear(inp, scale, zeropoint, axis, block_size, output_onnx_dtype, saturate, temp);
+            temp.copyTo(outs[0]);
+        } else {
+            CV_Error(Error::StsNotImplemented, "");
+        }
+    }
+}

@@ -1,0 +1,30 @@
+// SOURCE: modules/ts/include/opencv2/ts/ts_gtest.h
+// LINES:  10834-10858
+// LENGTH: 25 lines
+// LANG:   cpp
+// FUNC:   DefaultPrintTo
+void DefaultPrintTo(WrapPrinterType<kPrintContainer> /* dummy */,
+                    const C& container, ::std::ostream* os) {
+  const size_t kMaxCount = 32;  // The maximum number of elements to print.
+  *os << '{';
+  size_t count = 0;
+  for (typename C::const_iterator it = container.begin();
+       it != container.end(); ++it, ++count) {
+    if (count > 0) {
+      *os << ',';
+      if (count == kMaxCount) {  // Enough has been printed.
+        *os << " ...";
+        break;
+      }
+    }
+    *os << ' ';
+    // We cannot call PrintTo(*it, os) here as PrintTo() doesn't
+    // handle *it being a native array.
+    internal::UniversalPrint(*it, os);
+  }
+
+  if (count > 0) {
+    *os << ' ';
+  }
+  *os << '}';
+}

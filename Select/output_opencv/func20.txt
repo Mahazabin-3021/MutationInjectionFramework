@@ -1,0 +1,41 @@
+// SOURCE: modules/dnn/src/tensorflow/tf_importer.cpp
+// LINES:  2912-2947
+// LENGTH: 36 lines
+// LANG:   cpp
+// FUNC:   TFImporter::predictOutputDataLayout
+DataLayout TFImporter::predictOutputDataLayout(const tensorflow::NodeDef& layer)
+{
+    DataLayout layout = getDataLayout(layer);
+    if (layout != DNN_LAYOUT_UNKNOWN)
+    {
+        CV_LOG_DEBUG(NULL, "DNN/TF: predictOutputDataLayout(" << layer.name() << " @ " << layer.op() << ") => " << (int)layout << " (from attrs)");
+        return layout;
+    }
+
+    // Determine layout by layer's inputs
+    for (int i = 0, n = layer.input_size(); i < n; ++i)
+    {
+        std::map<String, DataLayout>::const_iterator it = data_layouts.find(getNodeName(layer.input(i)));
+        if (it != data_layouts.end())
+        {
+            if (layout != DNN_LAYOUT_UNKNOWN)
+            {
+                if (it->second != layout && it->second != DNN_LAYOUT_UNKNOWN)
+                    return DNN_LAYOUT_UNKNOWN;
+            }
+            else
+                layout = it->second;
+        }
+    }
+
+    if (layout != DNN_LAYOUT_UNKNOWN)
+    {
+        CV_LOG_DEBUG(NULL, "DNN/TF: predictOutputDataLayout(" << layer.name() << " @ " << layer.op() << ") => " << (int)layout << " (from inputs)");
+        return layout;
+    }
+
+    // Determine layout by layer's consumers recursively.
+    std::map<String, DataLayout>::const_iterator it = data_layouts.find(layer.name());
+    CV_Assert(it != data_layouts.end());
+    return it->second;
+}

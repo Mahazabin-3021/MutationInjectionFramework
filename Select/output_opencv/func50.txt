@@ -1,0 +1,47 @@
+// SOURCE: modules/features/3rdparty/annoy/annoylib.h
+// LINES:  1298-1339
+// LENGTH: 42 lines
+// LANG:   cpp
+// FUNC:   thread_build
+void thread_build(int q, ThreadedBuildPolicy& threaded_build_policy) {
+    Random _random(_seed);
+
+    vector<S> thread_roots;
+    while (1) {
+      if (q == -1) {
+        threaded_build_policy.lock_n_nodes();
+        if (_n_nodes >= 2 * _n_items) {
+          threaded_build_policy.unlock_n_nodes();
+          break;
+        }
+        threaded_build_policy.unlock_n_nodes();
+      } else {
+        if (thread_roots.size() >= (size_t)q) {
+          break;
+        }
+      }
+
+      if (_verbose) annoylib_showUpdate("pass %zd...\n", thread_roots.size());
+
+      vector<S> indices;
+      threaded_build_policy.lock_shared_nodes();
+      for (S i = 0; i < _n_items; i++) {
+        if (_get(i)->n_descendants >= 1) { // Issue #223
+          indices.push_back(i);
+        }
+      }
+      threaded_build_policy.unlock_shared_nodes();
+
+      int tree_idx;
+      S root = _make_tree(indices, true, _random, tree_idx, threaded_build_policy);
+      thread_roots.push_back(root);
+
+      threaded_build_policy.lock_root_order();
+      _rt_order.insert(make_pair(tree_idx, root));
+      threaded_build_policy.unlock_root_order();
+    }
+
+    threaded_build_policy.lock_roots();
+    _roots.insert(_roots.end(), thread_roots.begin(), thread_roots.end());
+    threaded_build_policy.unlock_roots();
+  }

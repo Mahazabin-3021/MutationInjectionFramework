@@ -1,0 +1,23 @@
+// SOURCE: modules/core/test/test_intrin_utils.hpp
+// LINES:  548-565
+// LENGTH: 18 lines
+// LANG:   cpp
+// FUNC:   dataA
+TheTest & test_mul()
+    {
+        Data<R> dataA, dataB, dataC;
+        dataA[1] = static_cast<LaneType>(std::numeric_limits<LaneType>::max());
+        dataB.reverse();
+        R a = dataA, b = dataB, c = dataC;
+
+        Data<R> resD = v_mul(a, b);
+        Data<R> resE = v_mul(a, b, c);
+        for (int i = 0; i < VTraits<R>::vlanes(); ++i)
+        {
+            SCOPED_TRACE(cv::format("i=%d", i));
+            EXPECT_EQ(saturate_cast<LaneType>(dataA[i] * dataB[i]), resD[i]);
+            EXPECT_EQ(saturate_cast<LaneType>(dataA[i] * dataB[i] * dataC[i]), resE[i]);
+        }
+
+        return *this;
+    }

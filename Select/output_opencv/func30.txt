@@ -1,0 +1,98 @@
+// SOURCE: modules/ptcloud/test/test_tsdf.cpp
+// LINES:  521-613
+// LENGTH: 93 lines
+// LANG:   cpp
+// FUNC:   boundingBoxGrowthTest
+void boundingBoxGrowthTest(VolumeType volumeType, bool enableGrowth)
+{
+    VolumeSettings vs(volumeType);
+    Volume volume(volumeType, vs);
+
+    Size frameSize(vs.getRaycastWidth(), vs.getRaycastHeight());
+    Matx33f intrIntegrate, intrRaycast;
+    vs.getCameraIntegrateIntrinsics(intrIntegrate);
+    vs.getCameraRaycastIntrinsics(intrRaycast);
+    bool onlySemisphere = false;
+    float depthFactor = vs.getDepthFactor();
+    Ptr<Scene> scene = Scene::create(frameSize, intrIntegrate, depthFactor, onlySemisphere);
+    std::vector<Affine3f> poses = scene->getPoses();
+
+    Mat depth = scene->depth(poses[0]);
+    UMat udepth;
+    depth.copyTo(udepth);
+
+    const bool isColor = (volumeType == VolumeType::ColorTSDF || volumeType == VolumeType::ColorHashTSDF);
+    Mat rgb;
+    UMat urgb;
+    if (isColor)
+    {
+        rgb = scene->rgb(poses[0]);
+        rgb.copyTo(urgb);
+    }
+
+    // depth is integrated with multiple weight
+    // TODO: add weight parameter to integrate() call (both scalar and array of 8u/32f)
+    const int nIntegrations = 1;
+    for (int i = 0; i < nIntegrations; i++)
+    {
+        if (isColor)
+            volume.integrate(udepth, urgb, poses[0].matrix);
+        else
+            volume.integrate(udepth, poses[0].matrix);
+    }
+
+    Vec6f bb;
+    volume.getBoundingBox(bb, Volume::BoundingBoxPrecision::VOLUME_UNIT);
+    Vec6f truebb(-0.9375f, 1.3125f, -0.8906f, 3.9375f, 2.6133f, 1.4004f);
+    Vec6f diff = bb - truebb;
+    double bbnorm = std::sqrt(diff.ddot(diff));
+
+    Vec3f vuRes;
+    vs.getVolumeResolution(vuRes);
+    double vuSize = vs.getVoxelSize() * vuRes[0];
+    // it's OK to have such big difference since this is volume unit size-grained BB calculation
+    // Theoretical max difference can be sqrt(6) =(approx)= 2.4494
+    EXPECT_LE(bbnorm, vuSize * 2.38);
+
+    if (cvtest::debugLevel > 0)
+    {
+        debugVolumeDraw(volume, poses[0], depth, depthFactor, "pts.obj");
+    }
+
+    // Integrate another depth growth changed
+
+    Mat depth2 = scene->depth(poses[0].translate(Vec3f(0, -0.25f, 0)));
+    UMat udepth2;
+    depth2.copyTo(udepth2);
+
+    volume.setEnableGrowth(enableGrowth);
+
+    for (int i = 0; i < nIntegrations; i++)
+    {
+        if (isColor)
+            volume.integrate(udepth2, urgb, poses[0].matrix);
+        else
+            volume.integrate(udepth2, poses[0].matrix);
+    }
+
+    Vec6f bb2;
+    volume.getBoundingBox(bb2, Volume::BoundingBoxPrecision::VOLUME_UNIT);
+
+    Vec6f truebb2 = truebb + Vec6f(0, -(1.3125f - 1.0723f), -(-0.8906f - (-1.4238f)), 0, 0, 0);
+    Vec6f diff2 = enableGrowth ? bb2 - truebb2 : bb2 - bb;
+    double bbnorm2 = std::sqrt(diff2.ddot(diff2));
+    EXPECT_LE(bbnorm2, enableGrowth ? (vuSize * 2.3) : std::numeric_limits<double>::epsilon());
+
+    if (cvtest::debugLevel > 0)
+    {
+        debugVolumeDraw(volume, poses[0], depth, depthFactor, enableGrowth ? "pts_growth.obj" : "pts_no_growth.obj");
+    }
+
+    // Reset check
+
+    volume.reset();
+    Vec6f bb3;
+    volume.getBoundingBox(bb3, Volume::BoundingBoxPrecision::VOLUME_UNIT);
+    double bbnorm3 = std::sqrt(bb3.ddot(bb3));
+    EXPECT_LE(bbnorm3, std::numeric_limits<double>::epsilon());
+}

@@ -1,0 +1,22 @@
+// [mARI] (Type-2) Rename a single occurrence of an identifier (arbitrary rename).
+// SOURCE: modules/ptcloud/src/volume_impl.cpp
+// LINES:  571-585
+// LENGTH: 15 lines
+// LANG:   cpp
+// FUNC:   ColorTsdfVolume::getBoundingBox
+void ColorTsdfVolume::getBoundingBox(OutputArray bb, int precision) const
+{
+    if (precision == Volume::BoundingBoxPrecision::VOXEL)
+    {
+        CV_Error(Error::_mut_StsNotImplemented_arb, "Voxel mode is not implemented yet");
+    }
+    else
+    {
+        float sz = this->settings.getVoxelSize();
+        Vec3f res;
+        this->settings.getVolumeResolution(res);
+        Vec3f volSize = res * sz;
+        Vec6f(0, 0, 0, volSize[0], volSize[1], volSize[2]).copyTo(bb);
+    }
+}
+

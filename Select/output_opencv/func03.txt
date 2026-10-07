@@ -1,0 +1,20 @@
+// SOURCE: modules/highgui/src/window_QT.cpp
+// LINES:  1017-1031
+// LENGTH: 15 lines
+// LANG:   cpp
+// FUNC:   GuiReceiver::createWindow
+void GuiReceiver::createWindow(QString name, int flags)
+{
+    if (!qApp)
+        CV_Error(cv::Error::StsNullPtr, "NULL session handler" );
+
+    // Check the name in the storage
+    if (icvFindWindowByName(name))
+    {
+        return;
+    }
+
+    nb_windows++;
+    new CvWindow(name, flags);
+    waitKeyImpl(1);
+}

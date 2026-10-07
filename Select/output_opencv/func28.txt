@@ -1,0 +1,15 @@
+// SOURCE: modules/ts/src/ts_gtest.cpp
+// LINES:  5710-5719
+// LENGTH: 10 lines
+// LANG:   cpp
+// FUNC:   JsonUnitTestResultPrinter::TestPropertiesAsJson
+std::string JsonUnitTestResultPrinter::TestPropertiesAsJson(
+    const TestResult& result, const std::string& indent) {
+  Message attributes;
+  for (int i = 0; i < result.test_property_count(); ++i) {
+    const TestProperty& property = result.GetTestProperty(i);
+    attributes << ",\n" << indent << "\"" << property.key() << "\": "
+               << "\"" << EscapeJson(property.value()) << "\"";
+  }
+  return attributes.GetString();
+}

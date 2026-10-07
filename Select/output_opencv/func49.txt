@@ -1,0 +1,47 @@
+// SOURCE: 3rdparty/protobuf/src/google/protobuf/descriptor.cc
+// LINES:  2841-2882
+// LENGTH: 42 lines
+// LANG:   cpp
+// FUNC:   RetrieveOptionsAssumingRightPool
+bool RetrieveOptionsAssumingRightPool(
+    int depth, const Message& options,
+    std::vector<std::string>* option_entries) {
+  option_entries->clear();
+  const Reflection* reflection = options.GetReflection();
+  std::vector<const FieldDescriptor*> fields;
+  reflection->ListFields(options, &fields);
+  for (const FieldDescriptor* field : fields) {
+    int count = 1;
+    bool repeated = false;
+    if (field->is_repeated()) {
+      count = reflection->FieldSize(options, field);
+      repeated = true;
+    }
+    for (int j = 0; j < count; j++) {
+      std::string fieldval;
+      if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
+        std::string tmp;
+        TextFormat::Printer printer;
+        printer.SetExpandAny(true);
+        printer.SetInitialIndentLevel(depth + 1);
+        printer.PrintFieldValueToString(options, field, repeated ? j : -1,
+                                        &tmp);
+        fieldval.append("{\n");
+        fieldval.append(tmp);
+        fieldval.append(depth * 2, ' ');
+        fieldval.append("}");
+      } else {
+        TextFormat::PrintFieldValueToString(options, field, repeated ? j : -1,
+                                            &fieldval);
+      }
+      std::string name;
+      if (field->is_extension()) {
+        name = "(." + field->full_name() + ")";
+      } else {
+        name = field->name();
+      }
+      option_entries->push_back(name + " = " + fieldval);
+    }
+  }
+  return !option_entries->empty();
+}

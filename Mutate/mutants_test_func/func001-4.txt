@@ -1,0 +1,24 @@
+// [mCC_EOL] (Type-1) Append a // end-of-line comment after a random line.
+void test_func(int hello, int bello, double gello) {
+    std::string name = "nova";
+
+    int age = 32; // mutated
+    int n = 30;
+
+    double height = 1.32;
+
+    hi(hello);
+
+    for (int i = 0; i < n; i++) {
+        // this is another comment
+        cout << age << " : hello \n";
+    }
+
+    cout << n << " " << n << " " << n << "\n";
+    cout << age << " " << name << " " << name << "\n";
+
+    bye(bello);
+
+    // this is a comment
+    return hello * bello + gello;
+}

@@ -1,0 +1,71 @@
+// SOURCE: modules/highgui/src/window_QT.cpp
+// LINES:  1680-1745
+// LENGTH: 66 lines
+// LANG:   cpp
+// FUNC:   CvWindow::CvWindow
+CvWindow::CvWindow(QString name, int arg2)
+{
+    Q_INIT_RESOURCE(window_QT);
+    type = type_CvWindow;
+
+    param_flags = arg2 & 0x0000000F;
+    param_gui_mode = arg2 & 0x000000F0;
+    param_ratio_mode =  arg2 & 0x00000F00;
+
+    //setAttribute(Qt::WA_DeleteOnClose); //in other case, does not release memory
+    setContentsMargins(0, 0, 0, 0);
+    setWindowTitle(name);
+    setObjectName(name);
+
+    setFocus( Qt::PopupFocusReason ); //#1695 arrow keys are not received without the explicit focus
+
+    resize(400, 300);
+    setMinimumSize(1, 1);
+
+    //1: create control panel
+    if (!global_control_panel)
+        global_control_panel = createParameterWindow();
+
+    //2: Layouts
+    createBarLayout();
+    createGlobalLayout();
+
+    //3: my view
+#ifndef HAVE_QT_OPENGL
+    if (arg2 & cv::WINDOW_OPENGL)
+        CV_Error( cv::Error::OpenGlNotSupported, "Library was built without OpenGL support" );
+    mode_display = CV_MODE_NORMAL;
+#else
+    mode_display = arg2 & cv::WINDOW_OPENGL ? CV_MODE_OPENGL : CV_MODE_NORMAL;
+    if (mode_display == CV_MODE_OPENGL)
+        param_gui_mode = cv::WINDOW_GUI_NORMAL;
+#endif
+    createView();
+
+    //4: shortcuts and actions
+    //5: toolBar and statusbar
+    if (param_gui_mode == cv::WINDOW_GUI_EXPANDED)
+    {
+        createActions();
+        createShortcuts();
+
+        createToolBar();
+        createStatusBar();
+    }
+
+    myView->getWidget()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    //Now attach everything
+    if (myToolBar)
+        myGlobalLayout->addWidget(myToolBar);
+
+    myGlobalLayout->addWidget(myView->getWidget());
+
+    myGlobalLayout->addLayout(myBarLayout);
+
+    if (myStatusBar)
+        myGlobalLayout->addWidget(myStatusBar);
+
+    setLayout(myGlobalLayout);
+    show();
+}

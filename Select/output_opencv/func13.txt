@@ -1,0 +1,58 @@
+// SOURCE: modules/dnn/src/layers/maxpool_layer.cpp
+// LINES:  717-769
+// LENGTH: 53 lines
+// LANG:   cpp
+// FUNC:   forward
+void forward(InputArrayOfArrays inputs_arr,
+                 OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays) CV_OVERRIDE
+    {
+        CV_Assert(inputs_arr.total() == 1);
+        const int inptype = inputs_arr.type(0);
+        const MatShape inpshape = inputs_arr.shape(0);
+
+        const int outKind = outputs_arr.kind();
+        CV_Assert(outKind == _InputArray::STD_VECTOR_MAT ||
+                  outKind == _InputArray::STD_VECTOR_UMAT);
+
+        const size_t noutputs = outputs.size();
+        CV_Assert(noutputs == 1u || noutputs == 2u);
+        const bool wantsIndices = (noutputs == 2u);
+
+        if (wantsIndices) {
+            CV_CheckType(inptype, inptype == CV_32F || inptype == CV_8S || inptype == CV_8U || inptype == CV_64F,
+                         "MaxPool with indices: unsupported data type");
+            CV_Assert(inpshape.dims == 4 && "MaxPool with indices: only 4D (N,C,H,W) inputs supported");
+            CV_Assert(inpshape.layout != DATA_LAYOUT_BLOCK &&
+                      "MaxPool with indices does not run on a BLOCK-layout input");
+        }
+
+        const MatShape outshape = convInferShape(inpshape, MatShape(),
+                                                 kernel_shape, 0, strides, dilations,
+                                                 pads, auto_pad, ceil_mode);
+        Mat inp = inputs_arr.getMat(0);
+
+        if (outKind == _InputArray::STD_VECTOR_MAT) {
+            std::vector<Mat>& outs = outputs_arr.getMatVecRef();
+            outs.resize(noutputs);
+            outs[0].fit(outshape, inptype);
+            if (wantsIndices)
+                outs[1].fit(outshape, CV_64S);
+            runForward(inp, outs, inpshape, outshape);
+        } else {
+            // [TODO] more efficient OpenCL implementation
+            std::vector<UMat>& outs = outputs_arr.getUMatVecRef();
+            outs.resize(noutputs);
+            outs[0].fit(outshape, inptype);
+            if (wantsIndices)
+                outs[1].fit(outshape, CV_64S);
+
+            std::vector<Mat> tmp(noutputs);
+            tmp[0].create(outshape, inptype);
+            if (wantsIndices)
+                tmp[1].create(outshape, CV_64S);
+            runForward(inp, tmp, inpshape, outshape);
+            for (size_t i = 0; i < noutputs; ++i)
+                tmp[i].copyTo(outs[i]);
+        }
+    }

@@ -1,0 +1,38 @@
+// SOURCE: modules/dnn/src/tensorflow/tf_importer.cpp
+// LINES:  2239-2271
+// LENGTH: 33 lines
+// LANG:   cpp
+// FUNC:   TFImporter::parsePriorBox
+void TFImporter::parsePriorBox(tensorflow::GraphDef& net, const tensorflow::NodeDef& layer, LayerParams& layerParams)
+{
+    const std::string& name = layer.name();
+    const int num_inputs = layer.input_size();
+
+    CV_CheckEQ(num_inputs, 2, "");
+    if (hasLayerAttr(layer, "min_size"))
+        layerParams.set("min_size", getLayerAttr(layer, "min_size").i());
+    if (hasLayerAttr(layer, "max_size"))
+        layerParams.set("max_size", getLayerAttr(layer, "max_size").i());
+    if (hasLayerAttr(layer, "flip"))
+        layerParams.set("flip", getLayerAttr(layer, "flip").b());
+    if (hasLayerAttr(layer, "clip"))
+        layerParams.set("clip", getLayerAttr(layer, "clip").b());
+    if (hasLayerAttr(layer, "offset"))
+        layerParams.set("offset", getLayerAttr(layer, "offset").f());
+    if (hasLayerAttr(layer, "step"))
+        layerParams.set("step", getLayerAttr(layer, "step").f());
+
+    const std::string paramNames[] = {"variance", "aspect_ratio", "scales",
+                                      "width", "height"};
+    for (int i = 0; i < 5; ++i)
+    {
+        if (hasLayerAttr(layer, paramNames[i]))
+        {
+            Mat values = getTensorContent(getLayerAttr(layer, paramNames[i]).tensor());
+            layerParams.set(paramNames[i],
+                            DictValue::arrayReal<float*>((float*)values.data, values.total()));
+        }
+    }
+    addLayer(name, "PriorBox", layerParams, {layer.input(0), layer.input(1)});
+    data_layouts[name] = DNN_LAYOUT_UNKNOWN;
+}

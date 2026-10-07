@@ -1,0 +1,24 @@
+// [mSRI] (Type-2) Rename an identifier and all its occurrences systematically.
+void test_func(int _mut_hello_renamed, int bello, double gello) {
+    std::string name = "nova";
+
+    int age = 32;
+    int n = 30;
+
+    double height = 1.32;
+
+    hi(_mut_hello_renamed);
+
+    for (int i = 0; i < n; i++) {
+        // this is another comment
+        cout << age << " : hello \n";
+    }
+
+    cout << n << " " << n << " " << n << "\n";
+    cout << age << " " << name << " " << name << "\n";
+
+    bye(bello);
+
+    // this is a comment
+    return _mut_hello_renamed * bello + gello;
+}

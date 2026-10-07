@@ -1,0 +1,33 @@
+// SOURCE: modules/dnn/misc/python/pyopencv_dnn.hpp
+// LINES:  146-173
+// LENGTH: 28 lines
+// LANG:   cpp
+// FUNC:   forward
+virtual void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays) CV_OVERRIDE
+    {
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+
+        std::vector<Mat> ins, outs;
+        inputs_arr.getMatVector(ins);
+        outputs_arr.getMatVector(outs);
+
+        PyObject* args = pyopencv_from(ins);
+        PyObject* res = PyObject_CallMethodObjArgs(o, PyString_FromString("forward"), args, NULL);
+        Py_DECREF(args);
+        if (!res)
+            CV_Error(Error::StsNotImplemented, "Failed to call \"forward\" method");
+
+        std::vector<Mat> pyOutputs;
+        CV_Assert(pyopencv_to(res, pyOutputs, ArgInfo("", 0)));
+        Py_DECREF(res);
+        PyGILState_Release(gstate);
+
+        CV_Assert(pyOutputs.size() == outs.size());
+        for (size_t i = 0; i < outs.size(); ++i)
+        {
+            CV_Assert(pyOutputs[i].size == outs[i].size);
+            CV_Assert(pyOutputs[i].type() == outs[i].type());
+            pyOutputs[i].copyTo(outs[i]);
+        }
+    }

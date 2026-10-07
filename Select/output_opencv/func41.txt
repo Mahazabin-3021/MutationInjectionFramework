@@ -1,0 +1,23 @@
+// SOURCE: modules/ptcloud/test/test_rendering.cpp
+// LINES:  444-461
+// LENGTH: 18 lines
+// LANG:   cpp
+// FUNC:   compareRGB
+void compareRGB(const cv::Mat& gt, const cv::Mat& mat, cv::Mat& diff, double normInfThreshold, double normL2Threshold)
+{
+    ASSERT_EQ(CV_32FC3, gt.type());
+    ASSERT_EQ(CV_32FC3, mat.type());
+    ASSERT_EQ(gt.size(), mat.size());
+
+    double normInfRgb = cv::norm(gt, mat, cv::NORM_INF);
+    EXPECT_LE(normInfRgb, normInfThreshold);
+    double normL2Rgb = cv::norm(gt, mat, cv::NORM_L2) / gt.total();
+    EXPECT_LE(normL2Rgb, normL2Threshold);
+    // add --test_debug to output differences
+    if (debugLevel > 0)
+    {
+        std::cout << "normInfRgb: " << normInfRgb << " vs " << normInfThreshold << std::endl;
+        std::cout << "normL2Rgb: " << normL2Rgb << " vs " << normL2Threshold << std::endl;
+    }
+    diff = (gt - mat) * 0.5 + 0.5;
+}

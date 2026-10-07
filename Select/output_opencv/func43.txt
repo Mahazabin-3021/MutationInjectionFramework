@@ -1,0 +1,20 @@
+// SOURCE: 3rdparty/protobuf/src/google/protobuf/text_format.cc
+// LINES:  331-345
+// LENGTH: 15 lines
+// LANG:   cpp
+// FUNC:   ReportError
+void ReportError(int line, int col, const std::string& message) {
+    had_errors_ = true;
+    if (error_collector_ == nullptr) {
+      if (line >= 0) {
+        GOOGLE_LOG(ERROR) << "Error parsing text-format "
+                   << root_message_type_->full_name() << ": " << (line + 1)
+                   << ":" << (col + 1) << ": " << message;
+      } else {
+        GOOGLE_LOG(ERROR) << "Error parsing text-format "
+                   << root_message_type_->full_name() << ": " << message;
+      }
+    } else {
+      error_collector_->AddError(line, col, message);
+    }
+  }

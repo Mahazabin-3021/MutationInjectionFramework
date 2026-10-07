@@ -1,0 +1,14 @@
+// SOURCE: modules/core/src/async.cpp
+// LINES:  345-353
+// LENGTH: 9 lines
+// LANG:   cpp
+// FUNC:   setException
+void setException(std::exception_ptr e)
+    {
+        if (future_is_returned && refcount_future == 0)
+            CV_Error(Error::StsError, "Associated AsyncArray has been destroyed");
+        CV_Assert(!has_result);
+        has_exception = true;
+        exception = e;
+        has_result = true;
+    }

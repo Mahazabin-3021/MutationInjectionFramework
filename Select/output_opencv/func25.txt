@@ -1,0 +1,59 @@
+// SOURCE: modules/objdetect/src/chessboard.cpp
+// LINES:  1615-1668
+// LENGTH: 54 lines
+// LANG:   cpp
+// FUNC:   Chessboard::Board::normalizeMarkerOrientation
+bool Chessboard::Board::normalizeMarkerOrientation()
+{
+    // use row by row fashion as cells must not be arranged correctly
+    Cell *pcell = NULL;
+    int trows = int(rowCount());
+    int tcols = int(colCount());
+    for(int row=0;row != trows && !pcell;++row)
+    {
+        for(int col=0;col != tcols;++col)
+        {
+            Cell* current_cell = getCell(row,col);
+            if(!current_cell->marker || !current_cell->right || !current_cell->right->marker)
+                continue;
+
+            if(current_cell->right->top && current_cell->right->top->marker)
+            {
+                rotateLeft();
+                rotateLeft();
+                pcell = current_cell->right;
+                break;
+            }
+            if(current_cell->right->bottom && current_cell->right->bottom->marker)
+            {
+                rotateLeft();
+                pcell = current_cell->right;
+                break;
+            }
+            if(current_cell->top && current_cell->top->marker)
+            {
+                rotateRight();
+                pcell = current_cell;
+                break;
+            }
+            if(current_cell->bottom && current_cell->bottom->marker)
+            {
+                // correct orientation
+                pcell = current_cell;
+                break;
+            }
+        }
+    }
+    if(pcell)
+    {
+        //check for ambiguity
+        if(rowCount()-pcell->bottom->getRow() > 2)
+        {
+            CV_LOG_DEBUG(NULL, "FIX board " << pcell->bottom->getRow() << " " << rowCount());
+            flipVertical();
+            rotateRight();
+        }
+        return true;
+    }
+    return false;
+}

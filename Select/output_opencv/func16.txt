@@ -1,0 +1,54 @@
+// SOURCE: modules/core/test/test_mat.cpp
+// LINES:  1093-1141
+// LENGTH: 49 lines
+// LANG:   cpp
+// FUNC:   run_case
+virtual int run_case(int depth, size_t channels, const Size& size, RNG& rng) CV_OVERRIDE
+    {
+        Mat src(size, CV_MAKETYPE(depth, (int)channels));
+        rng.fill(src, RNG::UNIFORM, 0, 100, true);
+
+        vector<Mat> dst;
+        split(src, dst);
+
+        // check result
+        std::stringstream commonLog;
+        commonLog << "Depth " << depth << " :";
+        if(dst.size() != channels)
+        {
+            ts->printf(cvtest::TS::LOG, "%s incorrect count of matrices in dst (%d instead of %d)\n",
+                       commonLog.str().c_str(), dst.size(), channels);
+            return cvtest::TS::FAIL_INVALID_OUTPUT;
+        }
+        for(size_t i = 0; i < dst.size(); i++)
+        {
+            if(dst[i].size() != size)
+            {
+                ts->printf(cvtest::TS::LOG, "%s incorrect size of dst[%d] (%d x %d instead of %d x %d)\n",
+                           commonLog.str().c_str(), i, dst[i].rows, dst[i].cols, size.height, size.width);
+                return cvtest::TS::FAIL_INVALID_OUTPUT;
+            }
+            if(dst[i].depth() != depth)
+            {
+                ts->printf(cvtest::TS::LOG, "%s: incorrect depth of dst[%d] (%d instead of %d)\n",
+                           commonLog.str().c_str(), i, dst[i].depth(), depth);
+                return cvtest::TS::FAIL_INVALID_OUTPUT;
+            }
+            if(dst[i].channels() != 1)
+            {
+                ts->printf(cvtest::TS::LOG, "%s: incorrect channels count of dst[%d] (%d instead of %d)\n",
+                           commonLog.str().c_str(), i, dst[i].channels(), 1);
+                return cvtest::TS::FAIL_INVALID_OUTPUT;
+            }
+        }
+
+        int diffElemCount = calcDiffElemCount(dst, src);
+        if(diffElemCount > 0)
+        {
+            ts->printf(cvtest::TS::LOG, "%s: there are incorrect elements in dst (part of them is %f)\n",
+                       commonLog.str().c_str(), static_cast<float>(diffElemCount)/(channels*size.area()));
+            return cvtest::TS::FAIL_INVALID_OUTPUT;
+        }
+
+        return cvtest::TS::OK;
+    }

@@ -1,0 +1,72 @@
+// SOURCE: 3rdparty/protobuf/src/google/protobuf/descriptor.pb.cc
+// LINES:  9713-9778
+// LENGTH: 66 lines
+// LANG:   cpp
+// FUNC:   UninterpretedOption::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const
+uint8_t* UninterpretedOption::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:google.protobuf.UninterpretedOption)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated .google.protobuf.UninterpretedOption.NamePart name = 2;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->_internal_name_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(2, this->_internal_name(i), target, stream);
+  }
+
+  cached_has_bits = _has_bits_[0];
+  // optional string identifier_value = 3;
+  if (cached_has_bits & 0x00000001u) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->_internal_identifier_value().data(), static_cast<int>(this->_internal_identifier_value().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
+      "google.protobuf.UninterpretedOption.identifier_value");
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_identifier_value(), target);
+  }
+
+  // optional uint64 positive_int_value = 4;
+  if (cached_has_bits & 0x00000008u) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(4, this->_internal_positive_int_value(), target);
+  }
+
+  // optional int64 negative_int_value = 5;
+  if (cached_has_bits & 0x00000010u) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(5, this->_internal_negative_int_value(), target);
+  }
+
+  // optional double double_value = 6;
+  if (cached_has_bits & 0x00000020u) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteDoubleToArray(6, this->_internal_double_value(), target);
+  }
+
+  // optional bytes string_value = 7;
+  if (cached_has_bits & 0x00000002u) {
+    target = stream->WriteBytesMaybeAliased(
+        7, this->_internal_string_value(), target);
+  }
+
+  // optional string aggregate_value = 8;
+  if (cached_has_bits & 0x00000004u) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->_internal_aggregate_value().data(), static_cast<int>(this->_internal_aggregate_value().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
+      "google.protobuf.UninterpretedOption.aggregate_value");
+    target = stream->WriteStringMaybeAliased(
+        8, this->_internal_aggregate_value(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:google.protobuf.UninterpretedOption)
+  return target;
+}

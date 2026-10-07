@@ -1,0 +1,65 @@
+// SOURCE: modules/geometry/src/ippe.cpp
+// LINES:  511-570
+// LENGTH: 60 lines
+// LANG:   cpp
+// FUNC:   PoseSolver::homographyFromSquarePoints
+void PoseSolver::homographyFromSquarePoints(InputArray _targetPoints, double halfLength, OutputArray H_)
+{
+    CV_CheckType(_targetPoints.type(), _targetPoints.type() == CV_32FC2 || _targetPoints.type() == CV_64FC2,
+                 "Type of _targetPoints must be CV_32FC2 or CV_64FC2" );
+
+    Mat pts = _targetPoints.getMat();
+
+    double p1x, p1y;
+    double p2x, p2y;
+    double p3x, p3y;
+    double p4x, p4y;
+
+    if (_targetPoints.type() == CV_32FC2)
+    {
+        p1x = -pts.at<Vec2f>(0)(0);
+        p1y = -pts.at<Vec2f>(0)(1);
+
+        p2x = -pts.at<Vec2f>(1)(0);
+        p2y = -pts.at<Vec2f>(1)(1);
+
+        p3x = -pts.at<Vec2f>(2)(0);
+        p3y = -pts.at<Vec2f>(2)(1);
+
+        p4x = -pts.at<Vec2f>(3)(0);
+        p4y = -pts.at<Vec2f>(3)(1);
+    }
+    else
+    {
+        p1x = -pts.at<Vec2d>(0)(0);
+        p1y = -pts.at<Vec2d>(0)(1);
+
+        p2x = -pts.at<Vec2d>(1)(0);
+        p2y = -pts.at<Vec2d>(1)(1);
+
+        p3x = -pts.at<Vec2d>(2)(0);
+        p3y = -pts.at<Vec2d>(2)(1);
+
+        p4x = -pts.at<Vec2d>(3)(0);
+        p4y = -pts.at<Vec2d>(3)(1);
+    }
+
+    //analytic solution:
+    double det = (halfLength * (p1x * p2y - p2x * p1y - p1x * p4y + p2x * p3y - p3x * p2y + p4x * p1y + p3x * p4y - p4x * p3y));
+    if (abs(det) < 1e-9)
+        CV_Error(Error::StsNoConv, "Determinant is zero!");
+    double detsInv = -1 / det;
+
+    Matx33d H;
+    H(0, 0) = detsInv * (p1x * p3x * p2y - p2x * p3x * p1y - p1x * p4x * p2y + p2x * p4x * p1y - p1x * p3x * p4y + p1x * p4x * p3y + p2x * p3x * p4y - p2x * p4x * p3y);
+    H(0, 1) = detsInv * (p1x * p2x * p3y - p1x * p3x * p2y - p1x * p2x * p4y + p2x * p4x * p1y + p1x * p3x * p4y - p3x * p4x * p1y - p2x * p4x * p3y + p3x * p4x * p2y);
+    H(0, 2) = detsInv * halfLength * (p1x * p2x * p3y - p2x * p3x * p1y - p1x * p2x * p4y + p1x * p4x * p2y - p1x * p4x * p3y + p3x * p4x * p1y + p2x * p3x * p4y - p3x * p4x * p2y);
+    H(1, 0) = detsInv * (p1x * p2y * p3y - p2x * p1y * p3y - p1x * p2y * p4y + p2x * p1y * p4y - p3x * p1y * p4y + p4x * p1y * p3y + p3x * p2y * p4y - p4x * p2y * p3y);
+    H(1, 1) = detsInv * (p2x * p1y * p3y - p3x * p1y * p2y - p1x * p2y * p4y + p4x * p1y * p2y + p1x * p3y * p4y - p4x * p1y * p3y - p2x * p3y * p4y + p3x * p2y * p4y);
+    H(1, 2) = detsInv * halfLength * (p1x * p2y * p3y - p3x * p1y * p2y - p2x * p1y * p4y + p4x * p1y * p2y - p1x * p3y * p4y + p3x * p1y * p4y + p2x * p3y * p4y - p4x * p2y * p3y);
+    H(2, 0) = -detsInv * (p1x * p3y - p3x * p1y - p1x * p4y - p2x * p3y + p3x * p2y + p4x * p1y + p2x * p4y - p4x * p2y);
+    H(2, 1) = detsInv * (p1x * p2y - p2x * p1y - p1x * p3y + p3x * p1y + p2x * p4y - p4x * p2y - p3x * p4y + p4x * p3y);
+    H(2, 2) = 1.0;
+
+    Mat(H, false).copyTo(H_);
+}

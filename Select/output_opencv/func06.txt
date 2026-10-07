@@ -1,0 +1,101 @@
+// SOURCE: modules/dnn/misc/tensorflow/graph.pb.cc
+// LINES:  670-764
+// LENGTH: 95 lines
+// LANG:   cpp
+// FUNC:   NodeDef::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const
+uint8_t* NodeDef::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:opencv_tensorflow.NodeDef)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "opencv_tensorflow.NodeDef.name");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_name(), target);
+  }
+
+  // string op = 2;
+  if (!this->_internal_op().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_op().data(), static_cast<int>(this->_internal_op().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "opencv_tensorflow.NodeDef.op");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_op(), target);
+  }
+
+  // repeated string input = 3;
+  for (int i = 0, n = this->_internal_input_size(); i < n; i++) {
+    const auto& s = this->_internal_input(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "opencv_tensorflow.NodeDef.input");
+    target = stream->WriteString(3, s, target);
+  }
+
+  // string device = 4;
+  if (!this->_internal_device().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_device().data(), static_cast<int>(this->_internal_device().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "opencv_tensorflow.NodeDef.device");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_device(), target);
+  }
+
+  // map<string, .opencv_tensorflow.AttrValue> attr = 5;
+  if (!this->_internal_attr().empty()) {
+    typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, ::opencv_tensorflow::AttrValue >::const_pointer
+        ConstPtr;
+    typedef ConstPtr SortItem;
+    typedef ::PROTOBUF_NAMESPACE_ID::internal::CompareByDerefFirst<SortItem> Less;
+    struct Utf8Check {
+      static void Check(ConstPtr p) {
+        (void)p;
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+          p->first.data(), static_cast<int>(p->first.length()),
+          ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+          "opencv_tensorflow.NodeDef.AttrEntry.key");
+      }
+    };
+
+    if (stream->IsSerializationDeterministic() &&
+        this->_internal_attr().size() > 1) {
+      ::std::unique_ptr<SortItem[]> items(
+          new SortItem[this->_internal_attr().size()]);
+      typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, ::opencv_tensorflow::AttrValue >::size_type size_type;
+      size_type n = 0;
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, ::opencv_tensorflow::AttrValue >::const_iterator
+          it = this->_internal_attr().begin();
+          it != this->_internal_attr().end(); ++it, ++n) {
+        items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
+      }
+      ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
+      for (size_type i = 0; i < n; i++) {
+        target = NodeDef_AttrEntry_DoNotUse::Funcs::InternalSerialize(5, items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second, target, stream);
+        Utf8Check::Check(&(*items[static_cast<ptrdiff_t>(i)]));
+      }
+    } else {
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, ::opencv_tensorflow::AttrValue >::const_iterator
+          it = this->_internal_attr().begin();
+          it != this->_internal_attr().end(); ++it) {
+        target = NodeDef_AttrEntry_DoNotUse::Funcs::InternalSerialize(5, it->first, it->second, target, stream);
+        Utf8Check::Check(&(*it));
+      }
+    }
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:opencv_tensorflow.NodeDef)
+  return target;
+}

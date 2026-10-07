@@ -1,0 +1,22 @@
+// [mSRI] (Type-2) Rename an identifier and all its occurrences systematically.
+// SOURCE: modules/ptcloud/src/volume_impl.cpp
+// LINES:  571-585
+// LENGTH: 15 lines
+// LANG:   cpp
+// FUNC:   ColorTsdfVolume::getBoundingBox
+void ColorTsdfVolume::getBoundingBox(OutputArray bb, int _mut_precision_renamed) const
+{
+    if (_mut_precision_renamed == Volume::BoundingBoxPrecision::VOXEL)
+    {
+        CV_Error(Error::StsNotImplemented, "Voxel mode is not implemented yet");
+    }
+    else
+    {
+        float sz = this->settings.getVoxelSize();
+        Vec3f res;
+        this->settings.getVolumeResolution(res);
+        Vec3f volSize = res * sz;
+        Vec6f(0, 0, 0, volSize[0], volSize[1], volSize[2]).copyTo(bb);
+    }
+}
+

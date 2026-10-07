@@ -1,0 +1,19 @@
+// SOURCE: modules/java/generator/src/cpp/Mat.cpp
+// LINES:  1513-1526
+// LENGTH: 14 lines
+// LANG:   cpp
+// FUNC:   Java_org_opencv_core_Mat_n_1release
+JNIEXPORT void JNICALL Java_org_opencv_core_Mat_n_1release
+  (JNIEnv* env, jclass, jlong self)
+{
+    static const char method_name[] = "Mat::n_1release()";
+    try {
+        LOGD("%s", method_name);
+        Mat* me = (Mat*) self; //TODO: check for NULL
+        me->release(  );
+    } catch(const std::exception &e) {
+        throwJavaException(env, &e, method_name);
+    } catch (...) {
+        throwJavaException(env, 0, method_name);
+    }
+}

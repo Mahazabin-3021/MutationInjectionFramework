@@ -1,0 +1,13 @@
+// SOURCE: modules/core/src/trace.cpp
+// LINES:  415-422
+// LENGTH: 8 lines
+// LANG:   cpp
+// FUNC:   RegionStatisticsStatus::checkResetSkipMode
+void RegionStatisticsStatus::checkResetSkipMode(int leaveDepth)
+{
+    if (leaveDepth <= _skipDepth)
+    {
+        CV_LOG_SKIP(NULL, "SKIP-RESET: leaveDepth=" << leaveDepth << " skipDepth=" << _skipDepth);
+        _skipDepth = -1;
+    }
+}

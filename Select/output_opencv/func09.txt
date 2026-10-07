@@ -1,0 +1,14 @@
+// SOURCE: modules/core/src/matrix_expressions.cpp
+// LINES:  1478-1486
+// LENGTH: 9 lines
+// LANG:   cpp
+// FUNC:   MatOp_Bin::divide
+void MatOp_Bin::divide(double s, const MatExpr& e, MatExpr& res) const
+{
+    CV_INSTRUMENT_REGION();
+
+    if( e.flags == '/' && (!e.b.data || e.beta == 0) )
+        MatOp_AddEx::makeExpr(res, e.a, Mat(), s/e.alpha, 0);
+    else
+        MatOp::divide(s, e, res);
+}
